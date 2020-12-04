@@ -1,4 +1,5 @@
 const BOARD_LENGTH = 8;
+const DEPTH = 2;
 
 class Move {
   constructor(ySrc, xSrc, yDst, xDst) {
@@ -17,11 +18,25 @@ class Move {
   }
 }
 
+class BaseHeuristic {
+  valueFor(board) {
+    return -Infinity;
+  }
+}
+
+class NaiveHeuristic extends BaseHeuristic {
+  valueFor(board) {
+    return board.numberOfRedPieces() - board.numberOfBlackPieces();
+  }
+}
+
 class Board {
-  constructor(height, width) {
+  constructor(height, width, heuristic) {
     this.height = height;
     this.width = width;
     this.data = [];
+    this.heuristicStrategy = heuristic;
+
     for (let i = 0; i < width; i++) {
       for (let j = 0; j < height; j++) {
         if (j === 0) {
@@ -31,6 +46,38 @@ class Board {
         this.data[i][j] = ".";
       }
     }
+  }
+
+  heuristic() {
+    return this.heuristicStrategy.valueFor(this);
+  }
+
+  numberOfBlackPieces() {
+    let sum = 0;
+
+    for (let i = 0; i < this.width; i++) {
+      for (let j = 0; j < this.height; j++) {
+        if (this.data[i][j].toLowerCase() === 'b') {
+          sum = sum + 1;
+        }
+      }
+    }
+
+    return sum;
+  }
+
+  numberOfRedPieces() {
+    let sum = 0;
+
+    for (let i = 0; i < this.width; i++) {
+      for (let j = 0; j < this.height; j++) {
+        if (this.data[i][j].toLowerCase() === 'r') {
+          sum = sum + 1;
+        }
+      }
+    }
+
+    return sum;
   }
 
   outOfBounds(i, j) {
@@ -108,6 +155,13 @@ class Board {
     }
   }
 
+  performMove(move) {
+    let c = Board.copy(this);
+    c.data[move.yDst][move.xDst] = c.data[move.ySrc][move.xSrc];
+    c.data[move.ySrc][move.xSrc] = ".";
+    return c;
+  }
+
   getLegalMoves(player) {
     let legalMoves = [];
 
@@ -157,7 +211,7 @@ class Board {
   }
 
   static copy(original) {
-    let c = new Board(original.height, original.width);
+    let c = new Board(original.height, original.width, original.heuristicStrategy);
     c.initialize(original.data);
     return c;
   }
@@ -183,22 +237,63 @@ class Board {
   }
 }
 
+class AI {
+  determineMove(board) {
+    let legalMoves = board.getLegalMoves('b');
+    let currentIndex = 0;
+    let currentValue = -Infinity;
 
-const initialBoard = require('fs').readFileSync('input_mid', 'utf-8').split('\n')
+    for (let i = 0; i < legalMoves.length; i++) {
+      let possibleMove = legalMoves[i];
+      let child = board.performMove(possibleMove);
+      let childValue = this.minimax(child, DEPTH, 'b');
+      if (childValue > currentValue) {
+        currentIndex = i;
+        currentValue = childValue;
+      }
+    }
 
-let board = new Board(BOARD_LENGTH, BOARD_LENGTH);
+    return legalMoves[currentIndex];
+  }
+
+  minimax(board, depth, maximizingPlayer) {
+    if (depth === 0 || (board.getLegalMoves('r').length === 0 && board.getLegalMoves('b').length === 0)) {
+      return board.heuristic();
+    }
+
+    if (maximizingPlayer === 'b') {
+      let value = -Infinity;
+      let legalMoves = board.getLegalMoves('b');
+      for (let i = 0; i < legalMoves.length; i++) {
+        let possibleMove = legalMoves[i];
+        let child = board.performMove(possibleMove);
+        value = Math.max(value, this.minimax(child, depth - 1, false))
+      }
+
+      return value;
+    }
+
+    else {
+      let value = Infinity;
+      let legalMoves = board.getLegalMoves('r');
+      for (let i = 0; i < legalMoves.length; i++) {
+        let possibleMove = legalMoves[i];
+        let child = board.performMove(possibleMove);
+        value = Math.min(value, this.minimax(child, depth - 1, true))
+      }
+
+      return value;
+    }
+  }
+}
+
+
+const initialBoard = require('fs').readFileSync('input_begin', 'utf-8').split('\n')
+
+let board = new Board(BOARD_LENGTH, BOARD_LENGTH, new NaiveHeuristic());
+let ai = new AI();
+
 board.initialize(initialBoard);
 console.log(board.toString());
 
-let redValidMoves = board.getLegalMoves('r');
-let blackValidMoves = board.getLegalMoves('b');
-
-console.log("======== RED =========");
-for(let i = 0; i < redValidMoves.length; i++) {
-  console.log(redValidMoves[i].toString());
-}
-
-console.log("======== BLACK =========");
-for(let i = 0; i < blackValidMoves.length; i++) {
-  console.log(blackValidMoves[i].toString());
-}
+console.log(ai.determineMove(board).toString());
