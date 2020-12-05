@@ -9,5 +9,10 @@
   },
   "keywords": [],
   "author": "Eric LaForce <elaforc@gmail.com> (https://github.com/elaforc/)",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "gulp": "^4.0.2",
+    "gulp-concat": "^2.6.1",
+    "gulp-replace": "^1.0.0"
+  }
 }
