@@ -1,5 +1,5 @@
 const BOARD_LENGTH = 8;
-const DEPTH = 2;
+const DEPTH = 5;
 
 class Move {
   constructor(ySrc, xSrc, yDst, xDst) {
@@ -238,15 +238,21 @@ class Board {
 }
 
 class AI {
-  determineMove(board) {
-    let legalMoves = board.getLegalMoves('b');
+  constructor(board, color) {
+    this.board = board;
+    this.color = color;
+    this.adversary = color === 'b' ? 'r' : 'b';
+  }
+
+  determineMove() {
+    let legalMoves = this.board.getLegalMoves(this.color);
     let currentIndex = 0;
     let currentValue = -Infinity;
 
     for (let i = 0; i < legalMoves.length; i++) {
       let possibleMove = legalMoves[i];
-      let child = board.performMove(possibleMove);
-      let childValue = this.minimax(child, DEPTH, 'b');
+      let child = this.board.performMove(possibleMove);
+      let childValue = this.minimax(child, DEPTH, this.color);
       if (childValue > currentValue) {
         currentIndex = i;
         currentValue = childValue;
@@ -261,9 +267,9 @@ class AI {
       return board.heuristic();
     }
 
-    if (maximizingPlayer === 'b') {
+    if (maximizingPlayer === this.color) {
       let value = -Infinity;
-      let legalMoves = board.getLegalMoves('b');
+      let legalMoves = board.getLegalMoves(this.color);
       for (let i = 0; i < legalMoves.length; i++) {
         let possibleMove = legalMoves[i];
         let child = board.performMove(possibleMove);
@@ -275,7 +281,7 @@ class AI {
 
     else {
       let value = Infinity;
-      let legalMoves = board.getLegalMoves('r');
+      let legalMoves = board.getLegalMoves(this.adversary);
       for (let i = 0; i < legalMoves.length; i++) {
         let possibleMove = legalMoves[i];
         let child = board.performMove(possibleMove);
@@ -287,13 +293,11 @@ class AI {
   }
 }
 
-
 const initialBoard = require('fs').readFileSync('input_begin', 'utf-8').split('\n')
 
 let board = new Board(BOARD_LENGTH, BOARD_LENGTH, new NaiveHeuristic());
-let ai = new AI();
-
 board.initialize(initialBoard);
 console.log(board.toString());
 
+let ai = new AI(board, 'r');
 console.log(ai.determineMove(board).toString());
