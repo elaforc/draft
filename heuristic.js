@@ -6,7 +6,7 @@ class BaseHeuristic {
 
 class NaiveHeuristic extends BaseHeuristic {
   valueFor(board) {
-    return board.numberOfRedPieces() - board.numberOfBlackPieces();
+    return board.numberOfPlayerPieces()*2 + board.numberOfPlayerKings()*5 - (board.numberOfAdversaryPieces()*2 + board.numberOfAdversaryKings()*5);
   }
 }
 

@@ -14,7 +14,8 @@ class AI {
     for (let i = 0; i < legalMoves.length; i++) {
       let possibleMove = legalMoves[i];
       let child = this.board.performMove(possibleMove);
-      let childValue = this.alphabeta(child, this.depth, this.color, -Infinity, Infinity);
+      let timer = Date.now();
+      let childValue = this.alphabeta(child, this.depth, this.color, -Infinity, Infinity, timer);
       if (childValue > currentValue) {
         currentIndex = i;
         currentValue = childValue;
@@ -24,18 +25,21 @@ class AI {
     return legalMoves[currentIndex];
   }
 
-  alphabeta(board, depth, maximizingPlayer, alpha, beta) {
-    if (depth === 0 || (board.getLegalMoves('r').length === 0 && board.getLegalMoves('b').length === 0)) {
+  alphabeta(board, depth, maximizingPlayer, alpha, beta, timer) {
+    let legalMoves = board.getLegalMoves(this.color);
+    let adversaryLegalMoves = board.getLegalMoves(this.adversary);
+    let delta = Date.now() - timer;
+
+    if (delta >= 8 || depth === 0 || (legalMoves.length === 0 && adversaryLegalMoves.length === 0)) {
       return board.heuristic();
     }
 
     if (maximizingPlayer === this.color) {
       let value = -Infinity;
-      let legalMoves = board.getLegalMoves(this.color);
       for (let i = 0; i < legalMoves.length; i++) {
         let possibleMove = legalMoves[i];
         let child = board.performMove(possibleMove);
-        value = Math.max(value, this.alphabeta(child, depth - 1, false, alpha, beta))
+        value = Math.max(value, this.alphabeta(child, depth - 1, false, alpha, beta, timer))
         alpha = Math.max(alpha, value);
         if (alpha >= beta) {
           break;
@@ -47,11 +51,10 @@ class AI {
 
     else {
       let value = Infinity;
-      let legalMoves = board.getLegalMoves(this.adversary);
-      for (let i = 0; i < legalMoves.length; i++) {
-        let possibleMove = legalMoves[i];
+      for (let i = 0; i < adversaryLegalMoves.length; i++) {
+        let possibleMove = adversaryLegalMoves[i];
         let child = board.performMove(possibleMove);
-        value = Math.min(value, this.alphabeta(child, depth - 1, true, alpha, beta))
+        value = Math.min(value, this.alphabeta(child, depth - 1, true, alpha, beta, timer))
         beta = Math.min(beta, value);
         if (beta <= alpha) {
           break;

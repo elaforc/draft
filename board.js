@@ -1,11 +1,16 @@
 const Move = require('./move.js').Move;
 
 class Board {
-  constructor(height, width, heuristic) {
+  constructor(height, width, heuristic, color) {
     this.height = height;
     this.width = width;
     this.data = [];
     this.heuristicStrategy = heuristic;
+    this.blackPieces = 0;
+    this.redPieces = 0;
+    this.blackKings = 0;
+    this.redKings = 0;
+    this.color = color;
 
     for (let i = 0; i < width; i++) {
       for (let j = 0; j < height; j++) {
@@ -22,32 +27,36 @@ class Board {
     return this.heuristicStrategy.valueFor(this);
   }
 
-  numberOfBlackPieces() {
-    let sum = 0;
-
-    for (let i = 0; i < this.width; i++) {
-      for (let j = 0; j < this.height; j++) {
-        if (this.data[i][j].toLowerCase() === 'b') {
-          sum = sum + 1;
-        }
-      }
+  numberOfPlayerPieces() {
+    if (this.color === 'r') {
+      return this.redPieces;
+    } else {
+      return this.blackPieces;
     }
-
-    return sum;
   }
 
-  numberOfRedPieces() {
-    let sum = 0;
-
-    for (let i = 0; i < this.width; i++) {
-      for (let j = 0; j < this.height; j++) {
-        if (this.data[i][j].toLowerCase() === 'r') {
-          sum = sum + 1;
-        }
-      }
+  numberOfAdversaryPieces() {
+    if (this.color === 'r') {
+      return this.blackPieces
+    } else {
+      return this.redPieces;
     }
+  }
 
-    return sum;
+  numberOfPlayerKings() {
+    if (this.color === 'r') {
+      return this.redKings;
+    } else {
+      return this.blackKings;
+    }
+  }
+
+  numberOfAdversaryKings() {
+    if (this.color === 'r') {
+      return this.blackKings;
+    } else {
+      return this.redKings;
+    }
   }
 
   outOfBounds(i, j) {
@@ -125,10 +134,40 @@ class Board {
     }
   }
 
+  update() {
+    let redSum = 0;
+    let redKingSum = 0;
+    let blackSum = 0;
+    let blackKingSum = 0;
+
+    for (let i = 0; i < this.width; i++) {
+      for (let j = 0; j < this.height; j++) {
+        if (this.data[i][j] === 'r') {
+          redSum = redSum + 1;
+        }
+        if (this.data[i][j] === 'b') {
+          blackSum = blackSum + 1;
+        }
+        if (this.data[i][j] === 'R') {
+          redKingSum = redKingSum + 1;
+        }
+        if (this.data[i][j] === 'B') {
+          blackKingSum = blackKingSum + 1;
+        }
+      }
+    }
+
+    this.blackPieces = blackSum;
+    this.redPieces = redSum;
+    this.blackKings = blackKingSum;
+    this.redKings = redKingSum;
+  }
+
   performMove(move) {
     let c = Board.copy(this);
     c.data[move.yDst][move.xDst] = c.data[move.ySrc][move.xSrc];
     c.data[move.ySrc][move.xSrc] = ".";
+    c.update();
     return c;
   }
 
@@ -181,7 +220,7 @@ class Board {
   }
 
   static copy(original) {
-    let c = new Board(original.height, original.width, original.heuristicStrategy);
+    let c = new Board(original.height, original.width, original.heuristicStrategy, original.color);
     c.initialize(original.data);
     return c;
   }

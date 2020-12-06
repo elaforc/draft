@@ -5,7 +5,7 @@ const AI = require('./ai.js').AI;
 
 const initialBoard = require('fs').readFileSync('input_begin', 'utf-8').split('\n')
 
-let board = new Board(constants.BOARD_LENGTH, constants.BOARD_LENGTH, new NaiveHeuristic());
+let board = new Board(constants.BOARD_LENGTH, constants.BOARD_LENGTH, new NaiveHeuristic(), 'r');
 board.initialize(initialBoard);
 console.log(board.toString());
 

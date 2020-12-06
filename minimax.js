@@ -1,5 +1,5 @@
 const myColor = readline();
-let board = new Board(constants.BOARD_LENGTH, constants.BOARD_LENGTH, new NaiveHeuristic());
+let board = new Board(constants.BOARD_LENGTH, constants.BOARD_LENGTH, new NaiveHeuristic(), myColor);
 let ai = new AI(board, myColor, constants.DEPTH);
 
 while (true) {
