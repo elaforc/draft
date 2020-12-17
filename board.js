@@ -129,7 +129,7 @@ class Board {
       } else {
         correctDirection = iSrc > iDst;
       }
-      
+
       return correctDirection && this.canJump(player, iSrc, jSrc, iDst, jDst);
     }
   }
@@ -163,6 +163,19 @@ class Board {
     this.redKings = redKingSum;
   }
 
+  performJump(move) {
+    let c = Board.copy(this);
+
+    let iIntermediate = move.yDst > move.ySrc ? move.yDst - 1 : move.yDst + 1;
+    let jIntermediate = move.xDst > move.xSrc ? move.xDst - 1 : move.xDst + 1;
+
+    c.data[move.yDst][move.xDst] = c.data[move.ySrc][move.xSrc];
+    c.data[move.ySrc][move.xSrc] = ".";
+    c.data[iIntermediate][jIntermediate] = ".";
+    c.update();
+    return c;
+  }
+
   performMove(move) {
     let c = Board.copy(this);
     c.data[move.yDst][move.xDst] = c.data[move.ySrc][move.xSrc];
@@ -171,26 +184,48 @@ class Board {
     return c;
   }
 
+  doubleJump(player, src, move, board) {
+    let nextMove = null;
+    if (board.isValidJump(player, move.yDst, move.xDst, move.yDst + 2, move.xDst + 2)) {
+      nextMove = new Move(move.yDst, move.xDst, move.yDst + 2, move.xDst + 2, board.height);
+    }
+    if (board.isValidJump(player, move.yDst, move.xDst, move.yDst - 2, move.xDst - 2)) {
+      nextMove = new Move(move.yDst, move.xDst, move.yDst - 2, move.xDst - 2, board.height);
+    }
+    if (board.isValidJump(player, move.yDst, move.xDst, move.yDst + 2, move.xDst - 2)) {
+      nextMove = new Move(move.yDst, move.xDst, move.yDst + 2, move.xDst - 2, board.height);
+    }
+    if (board.isValidJump(player, move.yDst, move.xDst, move.yDst - 2, move.xDst + 2)) {
+      nextMove = new Move(move.yDst, move.xDst, move.yDst - 2, move.xDst + 2, board.height);
+    }
+
+    if (nextMove === null) {
+      return new Move(src.ySrc, src.xSrc, move.yDst, move.xDst, this.height);
+    } else {
+      return board.doubleJump(player, src, nextMove, board.performJump(nextMove));
+    }
+  }
+
   getLegalMoves(player) {
     let legalMoves = [];
 
     for (let i = 0; i < this.height; i++) {
       for (let j = 0; j < this.width; j++) {
-          let current = this.data[i][j];
-          if (current === player || current === player.toUpperCase()) {
-            if (this.isValidJump(current, i, j, i+2, j+2)) {
-              legalMoves.push(new Move(i, j, i+2, j+2, this.height));
-            }
-            if (this.isValidJump(current, i, j, i-2, j-2)) {
-              legalMoves.push(new Move(i, j, i-2, j-2, this.height));
-            }
-            if (this.isValidJump(current, i, j, i+2, j-2)) {
-              legalMoves.push(new Move(i, j, i+2, j-2, this.height));
-            }
-            if (this.isValidJump(current, i, j, i-2, j+2)) {
-              legalMoves.push(new Move(i, j, i-2, j+2, this.height));
-            }
+        let current = this.data[i][j];
+        if (current === player || current === player.toUpperCase()) {
+          if (this.isValidJump(current, i, j, i + 2, j + 2)) {
+            legalMoves.push(this.doubleJump(current, new Move(i, j, i + 2, j + 2, this.height), new Move(i, j, i + 2, j + 2, this.height), Board.copy(this)));
           }
+          if (this.isValidJump(current, i, j, i - 2, j - 2)) {
+            legalMoves.push(this.doubleJump(current, new Move(i, j, i - 2, j - 2, this.height), new Move(i, j, i - 2, j - 2, this.height), Board.copy(this)));
+          }
+          if (this.isValidJump(current, i, j, i + 2, j - 2)) {
+            legalMoves.push(this.doubleJump(current, new Move(i, j, i + 2, j - 2, this.height), new Move(i, j, i + 2, j - 2, this.height), Board.copy(this)));
+          }
+          if (this.isValidJump(current, i, j, i - 2, j + 2)) {
+            legalMoves.push(this.doubleJump(current, new Move(i, j, i - 2, j + 2, this.height), new Move(i, j, i - 2, j + 2, this.height), Board.copy(this)));
+          }
+        }
       }
     }
 
@@ -199,17 +234,17 @@ class Board {
         for (let j = 0; j < this.width; j++) {
           let current = this.data[i][j];
           if (current === player || current === player.toUpperCase()) {
-            if (this.isValidMove(current, i, j, i+1, j+1)) {
-              legalMoves.push(new Move(i, j, i+1, j+1, this.height));
+            if (this.isValidMove(current, i, j, i + 1, j + 1)) {
+              legalMoves.push(new Move(i, j, i + 1, j + 1, this.height));
             }
-            if (this.isValidMove(current, i, j, i-1, j-1)) {
-              legalMoves.push(new Move(i, j, i-1, j-1, this.height));
+            if (this.isValidMove(current, i, j, i - 1, j - 1)) {
+              legalMoves.push(new Move(i, j, i - 1, j - 1, this.height));
             }
-            if (this.isValidMove(current, i, j, i+1, j-1)) {
-              legalMoves.push(new Move(i, j, i+1, j-1, this.height));
+            if (this.isValidMove(current, i, j, i + 1, j - 1)) {
+              legalMoves.push(new Move(i, j, i + 1, j - 1, this.height));
             }
-            if (this.isValidMove(current, i, j, i-1, j+1)) {
-              legalMoves.push(new Move(i, j, i-1, j+1, this.height));
+            if (this.isValidMove(current, i, j, i - 1, j + 1)) {
+              legalMoves.push(new Move(i, j, i - 1, j + 1, this.height));
             }
           }
         }
@@ -237,7 +272,7 @@ class Board {
     }
   }
 
-  toString () {
+  toString() {
     let str = "  A B C D E F G H\n";
     for (let i = 0; i < this.width; i++) {
       str += (8 - i) + " " + this.data[i].join(" ") + "\n";
