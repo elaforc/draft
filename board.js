@@ -176,15 +176,23 @@ class Board {
     return c;
   }
 
-  performMove(move) {
+  performMove(moves) {
     let c = Board.copy(this);
-    c.data[move.yDst][move.xDst] = c.data[move.ySrc][move.xSrc];
-    c.data[move.ySrc][move.xSrc] = ".";
+
+    for (let i = 0; i < moves.length; i++) {
+      let move = moves[i];
+      let iIntermediate = move.yDst > move.ySrc ? move.yDst - 1 : move.yDst + 1;
+      let jIntermediate = move.xDst > move.xSrc ? move.xDst - 1 : move.xDst + 1;
+      c.data[move.yDst][move.xDst] = c.data[move.ySrc][move.xSrc];
+      c.data[iIntermediate][jIntermediate] = ".";
+      c.data[move.ySrc][move.xSrc] = ".";
+    }
+
     c.update();
     return c;
   }
 
-  doubleJump(player, src, move, board) {
+  doubleJump(player, move, board) {
     let nextMove = null;
     if (board.isValidJump(player, move.yDst, move.xDst, move.yDst + 2, move.xDst + 2)) {
       nextMove = new Move(move.yDst, move.xDst, move.yDst + 2, move.xDst + 2, board.height);
@@ -200,9 +208,10 @@ class Board {
     }
 
     if (nextMove === null) {
-      return new Move(src.ySrc, src.xSrc, move.yDst, move.xDst, this.height);
+      return [move];
     } else {
-      return board.doubleJump(player, src, nextMove, board.performJump(nextMove));
+      let jumps = board.doubleJump(player, nextMove, board.performJump(nextMove));
+      return [move].concat(jumps);
     }
   }
 
@@ -214,16 +223,16 @@ class Board {
         let current = this.data[i][j];
         if (current === player || current === player.toUpperCase()) {
           if (this.isValidJump(current, i, j, i + 2, j + 2)) {
-            legalMoves.push(this.doubleJump(current, new Move(i, j, i + 2, j + 2, this.height), new Move(i, j, i + 2, j + 2, this.height), Board.copy(this)));
+            legalMoves.push(this.doubleJump(current, new Move(i, j, i + 2, j + 2, this.height), Board.copy(this)));
           }
           if (this.isValidJump(current, i, j, i - 2, j - 2)) {
-            legalMoves.push(this.doubleJump(current, new Move(i, j, i - 2, j - 2, this.height), new Move(i, j, i - 2, j - 2, this.height), Board.copy(this)));
+            legalMoves.push(this.doubleJump(current, new Move(i, j, i - 2, j - 2, this.height), Board.copy(this)));
           }
           if (this.isValidJump(current, i, j, i + 2, j - 2)) {
-            legalMoves.push(this.doubleJump(current, new Move(i, j, i + 2, j - 2, this.height), new Move(i, j, i + 2, j - 2, this.height), Board.copy(this)));
+            legalMoves.push(this.doubleJump(current, new Move(i, j, i + 2, j - 2, this.height), Board.copy(this)));
           }
           if (this.isValidJump(current, i, j, i - 2, j + 2)) {
-            legalMoves.push(this.doubleJump(current, new Move(i, j, i - 2, j + 2, this.height), new Move(i, j, i - 2, j + 2, this.height), Board.copy(this)));
+            legalMoves.push(this.doubleJump(current, new Move(i, j, i - 2, j + 2, this.height), Board.copy(this)));
           }
         }
       }
@@ -235,16 +244,16 @@ class Board {
           let current = this.data[i][j];
           if (current === player || current === player.toUpperCase()) {
             if (this.isValidMove(current, i, j, i + 1, j + 1)) {
-              legalMoves.push(new Move(i, j, i + 1, j + 1, this.height));
+              legalMoves.push([new Move(i, j, i + 1, j + 1, this.height)]);
             }
             if (this.isValidMove(current, i, j, i - 1, j - 1)) {
-              legalMoves.push(new Move(i, j, i - 1, j - 1, this.height));
+              legalMoves.push([new Move(i, j, i - 1, j - 1, this.height)]);
             }
             if (this.isValidMove(current, i, j, i + 1, j - 1)) {
-              legalMoves.push(new Move(i, j, i + 1, j - 1, this.height));
+              legalMoves.push([new Move(i, j, i + 1, j - 1, this.height)]);
             }
             if (this.isValidMove(current, i, j, i - 1, j + 1)) {
-              legalMoves.push(new Move(i, j, i - 1, j + 1, this.height));
+              legalMoves.push([new Move(i, j, i - 1, j + 1, this.height)]);
             }
           }
         }

@@ -15,7 +15,6 @@ while (true) {
     for (let i = 0; i < numLegalMoves; i++) {
         const moveString = readline(); // move
         legalMoves.push(moveString);
-        console.error(`legalMove ${i} - ${moveString}`)
     }
 
     console.log(legalMoves[0]);
